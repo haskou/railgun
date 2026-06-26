@@ -1,5 +1,11 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -140,10 +146,26 @@ describe("railgun cli", () => {
 
   it("copies DDD skills during project initialization without npm dependency", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-init-"));
+    const skillsPath = join(cwd, "source-skills");
+
+    mkdirSync(join(skillsPath, "ddd-engineer"), { recursive: true });
+    mkdirSync(join(skillsPath, "haskou-value-objects"), { recursive: true });
+    writeFileSync(
+      join(skillsPath, "ddd-engineer", "SKILL.md"),
+      "# DDD engineer\n",
+    );
+    writeFileSync(
+      join(skillsPath, "haskou-value-objects", "SKILL.md"),
+      "# Haskou value objects\n",
+    );
 
     execFileSync(process.execPath, [cli, "init"], {
       cwd,
       encoding: "utf8",
+      env: {
+        ...process.env,
+        RAILGUN_DDD_SKILLS_PATH: skillsPath,
+      },
       input: "skills-app\nSkills app\nMIT\nn\nn\nn\nn\n",
     });
 
