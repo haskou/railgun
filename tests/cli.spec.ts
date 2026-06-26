@@ -216,6 +216,9 @@ describe("railgun cli", () => {
     expect(readme).toContain("MIT. See [LICENSE](LICENSE).");
     expect(readme).toContain("img.shields.io/npm/v/railgun-init-defaults-");
     expect(readme).toContain("## Release Branches");
+    expect(readFileSync(join(cwd, "package.json"), "utf8")).toContain(
+      '"pack:dry": "npm pack --dry-run"',
+    );
   });
 
   it("adds expressive API test client and definitions with Express", () => {
@@ -253,6 +256,11 @@ describe("railgun cli", () => {
 
     railgun(["add", "npm"], cwd);
 
+    const workflow = readFileSync(
+      join(cwd, ".github/workflows/ci.yml"),
+      "utf8",
+    );
+
     expect(readFileSync(join(cwd, "README.md"), "utf8")).toContain(
       "github.com/haskou/railgun/actions/workflows/ci.yml",
     );
@@ -262,6 +270,13 @@ describe("railgun cli", () => {
     expect(readFileSync(join(cwd, "README.md"), "utf8")).toContain(
       "## Release Branches",
     );
+    expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("npm test");
+    expect(workflow).toContain("npm run build");
+    expect(workflow).toContain("npm publish --access public --tag latest");
+    expect(workflow).toContain("npm run pack:dry");
+    expect(workflow).not.toContain("NPM_TOKEN");
+    expect(workflow).not.toContain("NODE_AUTH_TOKEN");
   });
 
   it("adds npm badge using the GitHub remote when available", () => {

@@ -26,6 +26,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "lint": "eslint ./src ./tests --ext .ts",
+    "pack:dry": "npm pack --dry-run",
     "pretest": "yarn build",
     "start": "node dist/cli.js",
     "test": "jest --passWithNoTests",

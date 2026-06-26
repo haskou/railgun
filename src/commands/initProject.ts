@@ -133,6 +133,7 @@ function writeProjectBase(
       local: "nodemon",
       "local:start":
         "node --inspect=0.0.0.0:9229 -r ts-node/register -r tsconfig-paths/register src/index.ts",
+      "pack:dry": "npm pack --dry-run",
       start: "node dist/index.js",
       test: "npm-run-all lint test:unit",
       "test:unit": "jest --passWithNoTests",
