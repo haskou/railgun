@@ -271,6 +271,8 @@ describe("railgun cli", () => {
       "## Release Branches",
     );
     expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("npm test");
+    expect(workflow).toContain("npm run build");
     expect(workflow).toContain("npm publish --access public --tag latest");
     expect(workflow).toContain("npm run pack:dry");
     expect(workflow).not.toContain("NPM_TOKEN");

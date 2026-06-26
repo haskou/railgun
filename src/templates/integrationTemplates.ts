@@ -39,6 +39,12 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Run tests
+        run: npm test
+
+      - name: Build package
+        run: npm run build
+
       - name: Check npm package contents
         run: npm run pack:dry
 
@@ -86,6 +92,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Build package
+        run: npm run build
 
       - name: Check npm package contents
         run: npm run pack:dry
