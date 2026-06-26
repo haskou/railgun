@@ -35,6 +35,100 @@ Commands:
 
 There is a `man railgun` available.
 
+## Generated Structure
+
+`railgun init` creates a TypeScript project prepared for DDD services:
+
+```text
+src/
+  index.ts
+  shared/
+    infrastructure/
+      environment/
+        ApplicationKernel.ts
+        dependencyInjectionOptions.ts
+        environmentSchema.ts
+tests/
+  unit/
+AGENTS.md
+Dockerfile
+docker-compose.yml
+jest.config.ts
+nodemon.json
+tsconfig.json
+```
+
+The generated `src/index.ts` is the composition root. It creates the
+`@haskou/ddd-kernel` kernel, loads environment variables, configures dependency
+injection, and starts the optional Express runtime when that integration is
+enabled.
+
+Environment files live in `src/shared/infrastructure/environment` because they
+are shared infrastructure, not app-specific code. The default schema includes
+`NODE_ENV`, `HTTP_PORT`, and `ENABLE_SWAGGER`. Dependency injection only builds
+the container automatically outside production.
+
+## Generated Contexts
+
+`railgun add context Foo` creates a context under `src/contexts/foo` with one
+basic aggregate slice:
+
+```text
+src/contexts/foo/
+  domain/
+    Foo.ts
+    errors/FooNotFoundError.ts
+    events/FooCreatedEvent.ts
+    repositories/FooRepository.ts
+    services/FooDomainService.ts
+    value-objects/FooId.ts
+  application/
+    create/FooCreator.ts
+    create/messages/FooCreateMessage.ts
+    delete/FooDeleter.ts
+    delete/messages/FooDeleteMessage.ts
+    find-by-id/FooByIdFinder.ts
+    find-by-id/messages/FooFindByIdMessage.ts
+  infrastructure/
+    persistence/DummyFooRepository.ts
+tests/unit/
+  contexts/foo/
+  mothers/FooMother.ts
+```
+
+The generated domain includes an aggregate root, its ID value object, a created
+domain event, a repository interface, a domain service, and a not-found error.
+Application use cases are generated with explicit message classes at the
+application boundary. The infrastructure adapter is intentionally a dummy
+repository so the first tests can run without choosing a database.
+
+Generated files include `// TODO: Implement` placeholders where project-specific
+behavior should replace the starter behavior.
+
+## Express And API Tests
+
+`railgun add express` updates the composition root to use
+`ExpressKernelServer`, adds `ApplicationRoutes`, and creates a health route:
+
+```text
+src/apps/ApplicationRoutes.ts
+src/shared/infrastructure/ui/routes/HealthRoute.ts
+tests/api/features/health-api/GetHealthRoute.feature
+tests/api/steps/Definitions.ts
+tests/api/steps/RestClient.ts
+```
+
+The generated API test client supports `GET`, `POST`, `PUT`, `PATCH`, and
+`DELETE`, uses `API_BASE_URL` when present, and exposes response status, body,
+and headers to Cucumber step definitions.
+
+## Integrations
+
+`railgun add npm` creates `.github/workflows/ci.yml`, adds CI and npm badges to
+`README.md`, and documents the release branch prefixes used by the workflow.
+
+`railgun add renovate` creates `renovate.json` and adds the Renovate badge.
+
 ## Release Branches
 
 CI publishes npm versions from pull requests merged into the default branch
