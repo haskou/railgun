@@ -1,6 +1,6 @@
 {
   "name": "@haskou/railgun",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI to initialize DDD projects with @haskou/ddd-kernel.",
   "bin": {
     "railgun": "dist/cli.js"
