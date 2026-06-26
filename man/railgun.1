@@ -1,0 +1,36 @@
+.TH RAILGUN 1 "June 2026" "railgun 0.1.0" "User Commands"
+.SH NAME
+railgun \- scaffold DDD projects and integrations
+.SH SYNOPSIS
+.B railgun
+[\fBinit\fR]
+.br
+.B railgun add context
+\fIName\fR
+.br
+.B railgun add
+\fIexpress|npm|renovate\fR
+.br
+.B railgun help\fR
+.SH DESCRIPTION
+.B railgun
+initializes TypeScript DDD projects using @haskou/ddd-kernel, @haskou/value-objects and @haskou/eslint-config, and can add generated contexts and common integrations.
+.SH COMMANDS
+.TP
+.B init
+Ask Linux-style questions with defaults and create a project skeleton in the current directory.
+.TP
+.B add context Name
+Create a DDD context with aggregate root, id value object, repository, domain service, use cases, dummy repository and ObjectMother tests.
+.TP
+.B add express
+Add Express support, a health route and ExpressKernelServer bootstrap.
+.TP
+.B add npm
+Add GitHub Actions npm CI workflow and README badge.
+.TP
+.B add renovate
+Add Renovate config and README badge.
+.TP
+.B help
+Show command help.

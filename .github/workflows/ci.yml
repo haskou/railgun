@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
+      - run: yarn build
+
+  publish:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'fix/') || startsWith(github.event.pull_request.head.ref, 'feat/') || startsWith(github.event.pull_request.head.ref, 'break/'))
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Publish npm package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          if [[ "$SOURCE_BRANCH" == fix/* ]]; then
+            BUMP=patch
+          elif [[ "$SOURCE_BRANCH" == feat/* ]]; then
+            BUMP=minor
+          elif [[ "$SOURCE_BRANCH" == break/* ]]; then
+            BUMP=major
+          else
+            echo "No publish rule for $SOURCE_BRANCH"
+            exit 0
+          fi
+
+          npm version "$BUMP" -m "chore(release): 🔖 %s"
+          npm publish --access public
+          git push --follow-tags

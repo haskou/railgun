@@ -1,0 +1,126 @@
+import { write } from "../filesystem";
+import { names } from "../naming";
+import {
+  aggregateTemplate,
+  aggregateSpecTemplate,
+  createdEventTemplate,
+  createMessageTemplate,
+  creatorTemplate,
+  creatorSpecTemplate,
+  deleterTemplate,
+  deleterSpecTemplate,
+  deleteMessageTemplate,
+  domainServiceSpecTemplate,
+  domainServiceTemplate,
+  dummyRepositoryTemplate,
+  finderTemplate,
+  finderSpecTemplate,
+  findByIdMessageTemplate,
+  motherTemplate,
+  notFoundErrorTemplate,
+  repositoryTemplate,
+  valueObjectTemplate,
+} from "../templates/contextTemplates";
+
+export function addContext(root: string, rawName: string): void {
+  const context = names(rawName);
+  const base = `src/contexts/${context.kebab}`;
+
+  write(
+    root,
+    `${base}/domain/value-objects/${context.pascal}Id.ts`,
+    valueObjectTemplate(context),
+  );
+  write(
+    root,
+    `${base}/domain/${context.pascal}.ts`,
+    aggregateTemplate(context),
+  );
+  write(
+    root,
+    `${base}/domain/events/${context.pascal}CreatedEvent.ts`,
+    createdEventTemplate(context),
+  );
+  write(
+    root,
+    `${base}/domain/repositories/${context.pascal}Repository.ts`,
+    repositoryTemplate(context),
+  );
+  write(
+    root,
+    `${base}/domain/services/${context.pascal}DomainService.ts`,
+    domainServiceTemplate(context),
+  );
+  write(
+    root,
+    `${base}/domain/errors/${context.pascal}NotFoundError.ts`,
+    notFoundErrorTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/find-by-id/messages/${context.pascal}FindByIdMessage.ts`,
+    findByIdMessageTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/find-by-id/${context.pascal}ByIdFinder.ts`,
+    finderTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/create/messages/${context.pascal}CreateMessage.ts`,
+    createMessageTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/create/${context.pascal}Creator.ts`,
+    creatorTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/delete/messages/${context.pascal}DeleteMessage.ts`,
+    deleteMessageTemplate(context),
+  );
+  write(
+    root,
+    `${base}/application/delete/${context.pascal}Deleter.ts`,
+    deleterTemplate(context),
+  );
+  write(
+    root,
+    `${base}/infrastructure/persistence/Dummy${context.pascal}Repository.ts`,
+    dummyRepositoryTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/mothers/${context.pascal}Mother.ts`,
+    motherTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/contexts/${context.kebab}/domain/${context.pascal}.spec.ts`,
+    aggregateSpecTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/contexts/${context.kebab}/domain/services/${context.pascal}DomainService.spec.ts`,
+    domainServiceSpecTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/contexts/${context.kebab}/application/${context.pascal}Creator.spec.ts`,
+    creatorSpecTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/contexts/${context.kebab}/application/${context.pascal}ByIdFinder.spec.ts`,
+    finderSpecTemplate(context),
+  );
+  write(
+    root,
+    `tests/unit/contexts/${context.kebab}/application/${context.pascal}Deleter.spec.ts`,
+    deleterSpecTemplate(context),
+  );
+
+  console.log(`Added context ${context.pascal}`);
+}
