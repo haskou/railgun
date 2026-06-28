@@ -19,6 +19,7 @@ export function releaseUi(): string {
       .panel { background: white; border: 1px solid #d9dfe7; padding: 14px; margin-bottom: 16px; border-radius: 8px; }
       .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
       .badge { display: inline-block; padding: 3px 7px; border-radius: 999px; background: #e8eef5; font-size: 12px; }
+      .muted { color: #526070; }
       .selected { background: #f0fbf5; }
       .present { opacity: 0.58; }
       .error { color: #b42318; white-space: pre-wrap; }
@@ -41,6 +42,7 @@ export function releaseUi(): string {
           <button id="preflight">Preflight</button>
           <button id="create">Create release branch</button>
           <span id="summary"></span>
+          <span class="muted" id="status"></span>
         </div>
       </section>
       <section class="panel">
@@ -73,6 +75,12 @@ export function releaseUi(): string {
       };
       const selectedHashes = () => [...document.querySelectorAll("input[data-hash]:checked")].map((input) => input.dataset.hash);
       const show = (message, className = "") => { $("messages").className = className; $("messages").textContent = message; };
+      const setStatus = (message) => { $("status").textContent = message; };
+      const setBusy = (busy) => {
+        for (const id of ["refresh", "preflight", "create"]) {
+          $(id).disabled = busy;
+        }
+      };
       async function load() {
         const [repo, branches] = await Promise.all([api("/api/repo"), api("/api/branches")]);
         state.branches = branches.branches;
@@ -95,16 +103,27 @@ export function releaseUi(): string {
         $("releaseBranch").value = "";
       }
       async function refresh() {
-        const source = $("source").value;
-        const target = $("target").value;
-        const [compare, version] = await Promise.all([
-          api("/api/compare?source=" + encodeURIComponent(source) + "&target=" + encodeURIComponent(target)),
-          api("/api/version?target=" + encodeURIComponent(target)),
-        ]);
-        state.commits = compare.commits;
-        $("versionInfo").textContent = "Latest release on " + target + ": " + (version.latestRelease || "none") + " (" + version.latestVersion + ")";
-        renderCommits();
-        await calculate();
+        setBusy(true);
+        setStatus("Refreshing...");
+        show("");
+        try {
+          const source = $("source").value;
+          const target = $("target").value;
+          const [compare, version] = await Promise.all([
+            api("/api/compare?source=" + encodeURIComponent(source) + "&target=" + encodeURIComponent(target)),
+            api("/api/version?target=" + encodeURIComponent(target)),
+          ]);
+          state.commits = compare.commits;
+          $("versionInfo").textContent = "Latest release on " + target + ": " + (version.latestRelease || "none") + " (" + version.latestVersion + ")";
+          renderCommits();
+          await calculate();
+          setStatus("Refreshed " + state.commits.length + " commits.");
+        } catch (error) {
+          setStatus("Refresh failed.");
+          show(error.stack || String(error), "error");
+        } finally {
+          setBusy(false);
+        }
       }
       async function calculate() {
         const pending = state.commits.filter((commit) => commit.status === "pending").map((commit) => commit.hash);
@@ -131,21 +150,33 @@ export function releaseUi(): string {
         document.querySelectorAll("input[data-hash]").forEach((input) => input.addEventListener("change", calculate));
       }
       async function submit(path) {
+        const isPreflight = path === "/api/preflight";
+        setBusy(true);
+        setStatus(isPreflight ? "Running preflight..." : "Creating release branch...");
         show("");
-        const result = await api(path, {
-          method: "POST",
-          body: JSON.stringify({
-            source: $("source").value,
-            target: $("target").value,
-            releaseBranch: $("releaseBranch").value,
-            version: $("version").value,
-            commits: selectedHashes(),
-          }),
-        });
-        if (result.ok) {
-          show(JSON.stringify(result, null, 2), "ok");
-        } else {
-          show(JSON.stringify(result, null, 2), "error");
+        try {
+          const result = await api(path, {
+            method: "POST",
+            body: JSON.stringify({
+              source: $("source").value,
+              target: $("target").value,
+              releaseBranch: $("releaseBranch").value,
+              version: $("version").value,
+              commits: selectedHashes(),
+            }),
+          });
+          if (result.ok) {
+            setStatus(isPreflight ? "Preflight passed." : "Release branch created.");
+            show(JSON.stringify(result, null, 2), "ok");
+          } else {
+            setStatus(isPreflight ? "Preflight failed." : "Create release failed.");
+            show(JSON.stringify(result, null, 2), "error");
+          }
+        } catch (error) {
+          setStatus(isPreflight ? "Preflight failed." : "Create release failed.");
+          show(error.stack || String(error), "error");
+        } finally {
+          setBusy(false);
         }
       }
       $("refresh").addEventListener("click", refresh);
