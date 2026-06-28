@@ -9,7 +9,10 @@ railgun \- scaffold DDD projects and integrations
 \fIName\fR
 .br
 .B railgun add
-\fIexpress|npm|renovate\fR
+\fIci|docker|docker-ci|environment|express|npm|renovate\fR
+.br
+.B railgun sync
+\fIagents|skills\fR
 .br
 .B railgun help\fR
 .SH DESCRIPTION
@@ -23,14 +26,32 @@ Ask Linux-style questions with defaults and create a project skeleton in the cur
 .B add context Name
 Create a DDD context with aggregate root, id value object, repository, domain service, use cases, dummy repository and ObjectMother tests.
 .TP
+.B add ci
+Add GitHub Actions CI and npm publishing workflow, plus README badges.
+.TP
+.B add docker
+Add Dockerfile and docker-compose.yml.
+.TP
+.B add docker-ci
+Add GitHub Actions Docker build workflow and README badge.
+.TP
+.B add environment
+Add kernel environment files under src/shared/infrastructure/environment and default .env files.
+.TP
 .B add express
 Add Express support, a health route and ExpressKernelServer bootstrap.
 .TP
 .B add npm
-Add GitHub Actions npm CI workflow and README badge.
+Add GitHub Actions npm CI/publishing workflow and README badges.
 .TP
 .B add renovate
 Add Renovate config and README badge.
+.TP
+.B sync agents
+Download AGENTS.md from https://github.com/haskou/ddd-engineer-skills.git.
+.TP
+.B sync skills
+Download DDD skills from https://github.com/haskou/ddd-engineer-skills.git into .agents/skills.
 .TP
 .B help
 Show command help.

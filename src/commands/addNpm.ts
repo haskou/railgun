@@ -1,8 +1,9 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-
 import { addReadmeBadge, addReadmeSection, write } from "../filesystem";
 import { resolveGithubRepository } from "../githubRepository";
+import {
+  repositoryNameFromPackageName,
+  resolvePackageName,
+} from "../packageMetadata";
 import {
   npmWorkflow,
   releaseBranchesReadmeSection,
@@ -24,30 +25,4 @@ export function addNpm(root: string, projectName = "railgun"): void {
   );
   addReadmeSection(root, "Release Branches", releaseBranchesReadmeSection());
   console.log("Added npm workflow.");
-}
-
-function resolvePackageName(root: string): string | undefined {
-  const path = join(root, "package.json");
-
-  if (!existsSync(path)) {
-    return undefined;
-  }
-
-  const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
-
-  if (!isRecord(parsed) || typeof parsed.name !== "string") {
-    return undefined;
-  }
-
-  return parsed.name;
-}
-
-function repositoryNameFromPackageName(packageName: string): string {
-  const parts = packageName.split("/");
-
-  return parts[parts.length - 1] ?? packageName;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

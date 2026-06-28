@@ -20,17 +20,29 @@ npm i -g @haskou/railgun
 ```bash
   railgun init
   railgun add context <Name>
+  railgun add ci
+  railgun add docker
+  railgun add docker-ci
+  railgun add environment
   railgun add express
   railgun add npm
   railgun add renovate
+  railgun sync agents
+  railgun sync skills
   railgun help
 
 Commands:
-  init                 Initialize a DDD TypeScript project.
-  add context <Name>   Add a generated DDD context.
-  add express          Add ExpressKernelServer and health route.
-  add npm              Add npm CI workflow and README badge.
-  add renovate         Add Renovate config and README badge.
+  init                  Initialize a DDD TypeScript project.
+  add context <Name>    Add a generated DDD context.
+  add ci                Add GitHub Actions CI and npm publishing workflow.
+  add docker            Add Dockerfile and docker-compose.yml.
+  add docker-ci         Add Docker build workflow and README badge.
+  add environment       Add kernel environment files and .env defaults.
+  add express           Add ExpressKernelServer and health route.
+  add npm               Add npm CI/publishing workflow and README badges.
+  add renovate          Add Renovate config and README badge.
+  sync agents           Download AGENTS.md from ddd-engineer-skills.
+  sync skills           Sync DDD skills into .agents/skills.
 ```
 
 There is a `man railgun` available.
@@ -124,10 +136,28 @@ and headers to Cucumber step definitions.
 
 ## Integrations
 
-`railgun add npm` creates `.github/workflows/ci.yml`, adds CI and npm badges to
-`README.md`, and documents the release branch prefixes used by the workflow.
+`railgun add environment` creates the kernel environment files under
+`src/shared/infrastructure/environment` and writes `.env.local` and `.env.test`.
+
+`railgun add docker` creates `Dockerfile` and `docker-compose.yml` using the
+current Node version resolved by railgun.
+
+`railgun add docker-ci` creates `.github/workflows/docker.yml` to build the
+Docker test and runtime targets, and adds the Docker workflow badge to
+`README.md`.
+
+`railgun add ci` and `railgun add npm` create `.github/workflows/ci.yml`, add CI
+and npm badges to `README.md`, and document the release branch prefixes used by
+the workflow.
 
 `railgun add renovate` creates `renovate.json` and adds the Renovate badge.
+
+`railgun sync agents` downloads `AGENTS.md` from
+`https://github.com/haskou/ddd-engineer-skills.git`.
+
+`railgun sync skills` downloads the DDD skills from
+`https://github.com/haskou/ddd-engineer-skills.git` and copies them into
+`.agents/skills`.
 
 ## Release Branches
 

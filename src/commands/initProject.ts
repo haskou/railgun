@@ -1,14 +1,6 @@
 import { write, writeJson } from "../filesystem";
 import { askProjectAnswers, ProjectAnswers } from "../projectAnswers";
-import { copyDddSkills } from "../skills";
-import { dockerCompose, dockerfile } from "../templates/dockerTemplates";
 import {
-  applicationKernelTemplate,
-  dependencyInjectionOptionsTemplate,
-  environmentSchemaTemplate,
-} from "../templates/environmentTemplates";
-import {
-  agentsMd,
   basicIndex,
   nodemonConfig,
   projectBuildTsconfig,
@@ -23,23 +15,27 @@ import {
   PackageVersions,
   pinned,
   requiredPackages,
-  resolveNodeVersion,
   resolvePackageVersions,
 } from "../versions";
+import { addDocker } from "./addDocker";
+import { addEnvironment } from "./addEnvironment";
 import { addExpress } from "./addExpress";
 import { addNpm } from "./addNpm";
 import { addRenovate } from "./addRenovate";
+import { syncAgents } from "./syncAgents";
+import { syncSkills } from "./syncSkills";
 
 export async function initProject(root: string): Promise<void> {
   const answers = await askProjectAnswers(root);
   const versions = resolvePackageVersions();
-  const nodeVersion = resolveNodeVersion();
 
   writeProjectBase(root, answers, versions);
-  copyDddSkills(root);
+  syncAgents(root);
+  syncSkills(root);
+  addEnvironment(root);
 
   if (answers.docker) {
-    writeDocker(root, answers.name, nodeVersion);
+    addDocker(root, answers.name);
   }
 
   if (answers.express) {
@@ -161,42 +157,7 @@ function writeProjectBase(
     "import config from '@haskou/eslint-config';\n\nexport default config;\n",
   );
   write(root, ".gitignore", projectGitignore());
-  write(root, "AGENTS.md", agentsMd());
   write(root, "README.md", projectReadme(answers));
   write(root, "LICENSE", projectLicense(answers));
-  write(
-    root,
-    "src/shared/infrastructure/environment/ApplicationKernel.ts",
-    applicationKernelTemplate(),
-  );
-  write(
-    root,
-    "src/shared/infrastructure/environment/dependencyInjectionOptions.ts",
-    dependencyInjectionOptionsTemplate(),
-  );
-  write(
-    root,
-    "src/shared/infrastructure/environment/environmentSchema.ts",
-    environmentSchemaTemplate(),
-  );
   write(root, "src/index.ts", basicIndex());
-  write(
-    root,
-    ".env.local",
-    "NODE_ENV=local\nHTTP_PORT=8080\nENABLE_SWAGGER=false\n",
-  );
-  write(
-    root,
-    ".env.test",
-    "NODE_ENV=test\nHTTP_PORT=8081\nENABLE_SWAGGER=false\n",
-  );
-}
-
-function writeDocker(
-  root: string,
-  projectName: string,
-  nodeVersion: string,
-): void {
-  write(root, "Dockerfile", dockerfile(nodeVersion));
-  write(root, "docker-compose.yml", dockerCompose(projectName));
 }
