@@ -136,6 +136,7 @@ export function selectedCommits(
   target: string,
   hashes: string[],
 ): ReleaseCommit[] {
+  const sourceOrder = sourceCommitIndexes(root, source, target);
   const pending = new Map(
     pendingCommits(root, source, target)
       .filter((commit) => commit.status === "pending")
@@ -158,7 +159,10 @@ export function selectedCommits(
         status: "selected" as const,
       };
     })
-    .sort((left, right) => left.date.localeCompare(right.date));
+    .sort(
+      (left, right) =>
+        (sourceOrder.get(left.hash) ?? 0) - (sourceOrder.get(right.hash) ?? 0),
+    );
 }
 
 export function withTemporaryWorktree<T>(
@@ -236,6 +240,26 @@ function commitDetails(
     subject: subject.trim(),
     type: inference.type,
   };
+}
+
+function sourceCommitIndexes(
+  root: string,
+  source: string,
+  target: string,
+): Map<string, number> {
+  const orderedHashes = git(root, [
+    "rev-list",
+    "--reverse",
+    "--topo-order",
+    source,
+    "--not",
+    target,
+  ])
+    .trim()
+    .split("\n")
+    .filter(Boolean);
+
+  return new Map(orderedHashes.map((hash, index) => [hash, index]));
 }
 
 function conflictError(

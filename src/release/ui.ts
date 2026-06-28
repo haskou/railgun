@@ -223,7 +223,7 @@ export function releaseUi(): string {
         return state.branches.find((branch) => branch !== excluded) || "";
       }
       function renderBranchSelects(source, target) {
-        const nextSource = chooseBranch(source, target);
+        const nextSource = chooseBranch(source, "");
         const nextTarget = chooseBranch(target, nextSource);
         $("source").innerHTML = branchOptions(nextSource, nextTarget);
         $("target").innerHTML = branchOptions(nextTarget, nextSource);

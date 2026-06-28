@@ -28,6 +28,27 @@ function commit(
   return git(root, ["rev-parse", "HEAD"]).trim();
 }
 
+function commitWithAuthorDate(
+  root: string,
+  file: string,
+  content: string,
+  message: string,
+  authorDate: string,
+): string {
+  writeFileSync(join(root, file), content);
+  git(root, ["add", file]);
+  execFileSync("git", ["commit", "-m", message], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GIT_AUTHOR_DATE: authorDate,
+    },
+  });
+
+  return git(root, ["rev-parse", "HEAD"]).trim();
+}
+
 function git(root: string, args: string[]): string {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" });
 }
@@ -278,6 +299,37 @@ describe("release git workflow", () => {
     expect(git(root, ["log", "--format=%s", suggestion.branch])).toContain(
       "fix: second",
     );
+  });
+
+  it("keeps selected commits in source history order when author dates differ", () => {
+    const root = repo();
+
+    git(root, ["checkout", "-b", "production"]);
+    git(root, ["checkout", "main"]);
+    const parent = commitWithAuthorDate(
+      root,
+      "ordered.txt",
+      "base\nparent\n",
+      "fix: parent patch",
+      "2030-01-01T00:00:00Z",
+    );
+    const child = commitWithAuthorDate(
+      root,
+      "ordered.txt",
+      "base\nparent\nchild\n",
+      "fix: child patch",
+      "2020-01-01T00:00:00Z",
+    );
+
+    const result = preflightRelease(root, {
+      commits: [parent, child],
+      releaseBranch: "release/v0.0.1",
+      source: "main",
+      target: "production",
+      version: "0.0.1",
+    });
+
+    expect(result.ok).toBe(true);
   });
 
   it("detects cherry-pick conflicts without modifying the main working tree", () => {

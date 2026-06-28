@@ -228,9 +228,20 @@ function json(response: ServerResponse, status: number, value: unknown): void {
 }
 
 function openBrowser(url: string): void {
-  const command = process.platform === "darwin" ? "open" : "xdg-open";
-  const child = spawn(command, [url], { detached: true, stdio: "ignore" });
+  const command =
+    process.platform === "win32"
+      ? { args: ["/c", "start", "", url], bin: "cmd" }
+      : {
+          args: [url],
+          bin: process.platform === "darwin" ? "open" : "xdg-open",
+        };
+  const child = spawn(command.bin, command.args, {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
 
+  child.once("error", () => undefined);
   child.unref();
 }
 
