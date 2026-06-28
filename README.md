@@ -139,6 +139,8 @@ and headers to Cucumber step definitions.
 
 ## Release Branches From Cherry-Picks
 
+![Railgun release UI](./docs/railgun-release.png)
+
 `railgun release` opens a local web UI on `127.0.0.1` to create release branches
 from selected commits. It works with a source branch, usually `main` or
 `master`, and a target branch, such as `production`, `stable`, or `release`,
