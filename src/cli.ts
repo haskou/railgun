@@ -1,14 +1,21 @@
 #!/usr/bin/env node
 /* eslint-disable complexity */
 import { addContext } from "./commands/addContext";
+import { addDocker } from "./commands/addDocker";
+import { addDockerCi } from "./commands/addDockerCi";
+import { addEnvironment } from "./commands/addEnvironment";
 import { addExpress } from "./commands/addExpress";
 import { addNpm } from "./commands/addNpm";
 import { addRenovate } from "./commands/addRenovate";
 import { initProject } from "./commands/initProject";
+import { syncAgents } from "./commands/syncAgents";
+import { syncSkills } from "./commands/syncSkills";
 import { help } from "./help";
 
+type CommandHandler = (argument?: string) => Promise<void> | void;
+
 async function main(argv = process.argv.slice(2)): Promise<void> {
-  const [command, subcommand, name] = argv;
+  const [command, subcommand, argument] = argv;
 
   if (
     !command ||
@@ -21,38 +28,36 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
     return;
   }
 
-  if (command === "init") {
-    await initProject(process.cwd());
+  const handler =
+    commandHandlers()[[command, subcommand].filter(Boolean).join(" ")];
 
-    return;
+  if (!handler) {
+    throw new Error(`Unknown command: ${argv.join(" ")}`);
   }
 
-  if (command === "add" && subcommand === "context") {
-    assertName(name, "Missing context name. Example: railgun add context Foo");
-    addContext(process.cwd(), name);
+  await handler(argument);
+}
 
-    return;
-  }
-
-  if (command === "add" && subcommand === "express") {
-    addExpress(process.cwd());
-
-    return;
-  }
-
-  if (command === "add" && subcommand === "npm") {
-    addNpm(process.cwd());
-
-    return;
-  }
-
-  if (command === "add" && subcommand === "renovate") {
-    addRenovate(process.cwd());
-
-    return;
-  }
-
-  throw new Error(`Unknown command: ${argv.join(" ")}`);
+function commandHandlers(): Record<string, CommandHandler> {
+  return {
+    "add ci": () => addNpm(process.cwd()),
+    "add context": (name) => {
+      assertName(
+        name,
+        "Missing context name. Example: railgun add context Foo",
+      );
+      addContext(process.cwd(), name);
+    },
+    "add docker": () => addDocker(process.cwd()),
+    "add docker-ci": () => addDockerCi(process.cwd()),
+    "add environment": () => addEnvironment(process.cwd()),
+    "add express": () => addExpress(process.cwd()),
+    "add npm": () => addNpm(process.cwd()),
+    "add renovate": () => addRenovate(process.cwd()),
+    init: () => initProject(process.cwd()),
+    "sync agents": () => syncAgents(process.cwd()),
+    "sync skills": () => syncSkills(process.cwd()),
+  };
 }
 
 function assertName(

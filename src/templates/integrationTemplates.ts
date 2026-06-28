@@ -328,3 +328,36 @@ according to the source branch prefix:
 Other branch names run validation only and do not publish.
 `;
 }
+
+export function dockerWorkflow(): string {
+  return `name: Docker
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: docker build --target tests --tag railgun-tests .
+
+      - name: Build runtime image
+        run: docker build --target runtime --tag railgun-runtime .
+`;
+}

@@ -24,9 +24,35 @@ describe("railgun cli", () => {
 
     expect(output).toContain("railgun init");
     expect(output).toContain("railgun add context <Name>");
+    expect(output).toContain("railgun add ci");
+    expect(output).toContain("railgun add docker");
+    expect(output).toContain("railgun add docker-ci");
+    expect(output).toContain("railgun add environment");
     expect(output).toContain("railgun add express");
     expect(output).toContain("railgun add npm");
     expect(output).toContain("railgun add renovate");
+    expect(output).toContain("railgun sync agents");
+    expect(output).toContain("railgun sync skills");
+  });
+
+  it("keeps README and man page aligned with standalone commands", () => {
+    const readme = readFileSync(join(__dirname, "..", "README.md"), "utf8");
+    const manPage = readFileSync(
+      join(__dirname, "..", "man", "railgun.1"),
+      "utf8",
+    );
+
+    for (const command of [
+      "add ci",
+      "add docker",
+      "add docker-ci",
+      "add environment",
+      "sync agents",
+      "sync skills",
+    ]) {
+      expect(readme).toContain(`railgun ${command}`);
+      expect(manPage).toContain(command);
+    }
   });
 
   it("adds a context with application, domain, infrastructure and tests", () => {
@@ -249,6 +275,100 @@ describe("railgun cli", () => {
     expect(definitions).toContain("response body contains {string}");
   });
 
+  it("adds environment config standalone", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-environment-"));
+
+    railgun(["add", "environment"], cwd);
+
+    expect(
+      existsSync(
+        join(cwd, "src/shared/infrastructure/environment/ApplicationKernel.ts"),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(
+          cwd,
+          "src/shared/infrastructure/environment/dependencyInjectionOptions.ts",
+        ),
+      ),
+    ).toBe(true);
+    expect(existsSync(join(cwd, ".env.local"))).toBe(true);
+    expect(readFileSync(join(cwd, ".env.test"), "utf8")).toContain(
+      "HTTP_PORT=8081",
+    );
+  });
+
+  it("adds Docker config standalone", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-docker-"));
+
+    railgun(["add", "docker"], cwd);
+
+    expect(readFileSync(join(cwd, "Dockerfile"), "utf8")).toContain(
+      "FROM node:",
+    );
+    expect(readFileSync(join(cwd, "docker-compose.yml"), "utf8")).toContain(
+      "services:",
+    );
+  });
+
+  it("adds Docker CI workflow and README badge standalone", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-docker-ci-"));
+
+    writeFileSync(join(cwd, "README.md"), "# docker-ci-app\n");
+
+    railgun(["add", "docker-ci"], cwd);
+
+    const workflow = readFileSync(
+      join(cwd, ".github/workflows/docker.yml"),
+      "utf8",
+    );
+    const readme = readFileSync(join(cwd, "README.md"), "utf8");
+
+    expect(workflow).toContain("name: Docker");
+    expect(workflow).toContain("docker build --target tests");
+    expect(workflow).toContain("docker build --target runtime");
+    expect(readme).toContain(
+      "github.com/haskou/railgun/actions/workflows/docker.yml",
+    );
+    expect(readme).toContain("[![Docker]");
+  });
+
+  it("syncs AGENTS.md standalone", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-agents-"));
+
+    writeFileSync(join(cwd, "AGENTS.md"), "stale\n");
+    railgun(["sync", "agents"], cwd);
+
+    expect(readFileSync(join(cwd, "AGENTS.md"), "utf8")).toBe(
+      readFileSync(join(__dirname, "..", "AGENTS.md"), "utf8"),
+    );
+  });
+
+  it("syncs DDD skills standalone", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-skills-"));
+    const skillsPath = join(cwd, "source-skills");
+
+    mkdirSync(join(skillsPath, "ddd-engineer"), { recursive: true });
+    writeFileSync(
+      join(skillsPath, "ddd-engineer", "SKILL.md"),
+      "# DDD engineer\n",
+    );
+
+    execFileSync(process.execPath, [cli, "sync", "skills"], {
+      cwd,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        RAILGUN_DDD_SKILLS_PATH: skillsPath,
+      },
+    });
+
+    expect(existsSync(join(cwd, ".agents/skills/ddd-engineer/SKILL.md"))).toBe(
+      true,
+    );
+  });
+
   it("adds npm badge using project name fallback when no git repository exists", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-npm-"));
 
@@ -277,6 +397,21 @@ describe("railgun cli", () => {
     expect(workflow).toContain("npm run pack:dry");
     expect(workflow).not.toContain("NPM_TOKEN");
     expect(workflow).not.toContain("NODE_AUTH_TOKEN");
+  });
+
+  it("adds CI workflow as a standalone alias", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-ci-"));
+
+    writeFileSync(join(cwd, "README.md"), "# ci-app\n");
+
+    railgun(["add", "ci"], cwd);
+
+    expect(
+      readFileSync(join(cwd, ".github/workflows/ci.yml"), "utf8"),
+    ).toContain("Publish to npm");
+    expect(readFileSync(join(cwd, "README.md"), "utf8")).toContain(
+      "## Release Branches",
+    );
   });
 
   it("adds npm badge using the GitHub remote when available", () => {
