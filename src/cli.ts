@@ -29,14 +29,21 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
     return;
   }
 
-  const handler =
-    commandHandlers()[[command, subcommand].filter(Boolean).join(" ")];
+  const handler = commandHandlers()[commandKey(command, subcommand)];
 
   if (!handler) {
     throw new Error(`Unknown command: ${argv.join(" ")}`);
   }
 
   await handler(argv.slice(command === "add" || command === "sync" ? 2 : 1));
+}
+
+function commandKey(command: string, subcommand: string | undefined): string {
+  if (command === "add" || command === "sync") {
+    return [command, subcommand].filter(Boolean).join(" ");
+  }
+
+  return command;
 }
 
 function commandHandlers(): Record<string, CommandHandler> {
