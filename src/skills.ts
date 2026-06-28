@@ -2,13 +2,13 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
-const defaultSkillsPath = "/home/hasko/Projects/ddd-engineer-skill/skills";
+const developmentSkillsPath = "/home/hasko/Projects/ddd-engineer-skill/skills";
 
 export function copyDddSkills(root: string): void {
-  const source = process.env.RAILGUN_DDD_SKILLS_PATH ?? defaultSkillsPath;
+  const source = resolveSkillsPath();
 
-  if (!existsSync(source)) {
-    console.log(`DDD skills not found at ${source}. Skipping skill copy.`);
+  if (!source) {
+    console.log("DDD skills not found. Skipping skill copy.");
 
     return;
   }
@@ -18,6 +18,20 @@ export function copyDddSkills(root: string): void {
   cpSync(source, target, { recursive: true });
   writeVersionFile(source, target);
   console.log(`Copied DDD skills from ${source}`);
+}
+
+function resolveSkillsPath(): string | undefined {
+  const candidates = [
+    process.env.RAILGUN_DDD_SKILLS_PATH,
+    join(__dirname, "..", "skills"),
+    join(__dirname, "..", "..", "skills"),
+    developmentSkillsPath,
+  ];
+
+  return candidates.find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && existsSync(candidate),
+  );
 }
 
 function writeVersionFile(source: string, target: string): void {

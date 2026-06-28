@@ -369,6 +369,29 @@ describe("railgun cli", () => {
     );
   });
 
+  it("syncs packaged DDD skills without environment override", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "railgun-packaged-skills-"));
+
+    execFileSync(process.execPath, [cli, "sync", "skills"], {
+      cwd,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        RAILGUN_DDD_SKILLS_PATH: "",
+      },
+    });
+
+    expect(existsSync(join(cwd, ".agents/skills/ddd-engineer/SKILL.md"))).toBe(
+      true,
+    );
+    expect(existsSync(join(cwd, ".agents/skills/ddd-migration/SKILL.md"))).toBe(
+      true,
+    );
+    expect(
+      existsSync(join(cwd, ".agents/skills/haskou-value-objects/SKILL.md")),
+    ).toBe(true);
+  });
+
   it("adds npm badge using project name fallback when no git repository exists", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-npm-"));
 

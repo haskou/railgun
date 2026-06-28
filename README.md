@@ -154,7 +154,9 @@ the workflow.
 
 `railgun sync agents` rewrites `AGENTS.md` from the railgun template.
 
-`railgun sync skills` copies the DDD skills into `.agents/skills`.
+`railgun sync skills` copies the packaged DDD skills into `.agents/skills`.
+Set `RAILGUN_DDD_SKILLS_PATH` to copy from a custom local skills directory
+instead.
 
 ## Release Branches
 
