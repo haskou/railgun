@@ -8,14 +8,15 @@ import { addExpress } from "./commands/addExpress";
 import { addNpm } from "./commands/addNpm";
 import { addRenovate } from "./commands/addRenovate";
 import { initProject } from "./commands/initProject";
+import { release } from "./commands/release";
 import { syncAgents } from "./commands/syncAgents";
 import { syncSkills } from "./commands/syncSkills";
 import { help } from "./help";
 
-type CommandHandler = (argument?: string) => Promise<void> | void;
+type CommandHandler = (args: string[]) => Promise<void> | void;
 
 async function main(argv = process.argv.slice(2)): Promise<void> {
-  const [command, subcommand, argument] = argv;
+  const [command, subcommand] = argv;
 
   if (
     !command ||
@@ -35,13 +36,13 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
     throw new Error(`Unknown command: ${argv.join(" ")}`);
   }
 
-  await handler(argument);
+  await handler(argv.slice(command === "add" || command === "sync" ? 2 : 1));
 }
 
 function commandHandlers(): Record<string, CommandHandler> {
   return {
     "add ci": () => addNpm(process.cwd()),
-    "add context": (name) => {
+    "add context": ([name]) => {
       assertName(
         name,
         "Missing context name. Example: railgun add context Foo",
@@ -55,6 +56,7 @@ function commandHandlers(): Record<string, CommandHandler> {
     "add npm": () => addNpm(process.cwd()),
     "add renovate": () => addRenovate(process.cwd()),
     init: () => initProject(process.cwd()),
+    release: (args) => release(process.cwd(), args),
     "sync agents": () => syncAgents(process.cwd()),
     "sync skills": () => syncSkills(process.cwd()),
   };

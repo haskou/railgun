@@ -27,6 +27,7 @@ npm i -g @haskou/railgun
   railgun add express
   railgun add npm
   railgun add renovate
+  railgun release --source main --target production
   railgun sync agents
   railgun sync skills
   railgun help
@@ -41,6 +42,7 @@ Commands:
   add express           Add ExpressKernelServer and health route.
   add npm               Add npm CI/publishing workflow and README badges.
   add renovate          Add Renovate config and README badge.
+  release               Open a local UI to create a release branch.
   sync agents           Download AGENTS.md from ddd-engineer-skills.
   sync skills           Sync DDD skills into .agents/skills.
 ```
@@ -133,6 +135,53 @@ tests/api/steps/RestClient.ts
 The generated API test client supports `GET`, `POST`, `PUT`, `PATCH`, and
 `DELETE`, uses `API_BASE_URL` when present, and exposes response status, body,
 and headers to Cucumber step definitions.
+
+## Release Branches From Cherry-Picks
+
+`railgun release` opens a local web UI on `127.0.0.1` to create release branches
+from selected commits. It works with a source branch, usually `main` or
+`master`, and a target branch, such as `production`, `stable`, or `release`,
+that contains the last published release.
+
+The new release branch always starts from the selected target branch. Selected
+commits from the source branch are then applied with `git cherry-pick` in
+chronological order:
+
+```bash
+railgun release --source main --target production
+```
+
+Example generated branch:
+
+```text
+release/v1.5.0
+```
+
+Pending commits are detected with patch equivalence using Git, so commits that
+are already present in the target branch through a previous cherry-pick are not
+shown as pending. The latest release is detected from SemVer tags reachable from
+the target branch, accepting both `v1.2.3` and `1.2.3`. If no SemVer tag is
+reachable, `0.0.0` is used as the base version.
+
+The next version is calculated from selected commits:
+
+| Source branch prefix | Version bump |
+| -------------------- | ------------ |
+| `break/*`            | Major        |
+| `feat/*`             | Minor        |
+| `fix/*`              | Patch        |
+
+If the branch name does not reveal the bump, Conventional Commits are used as a
+fallback: `feat:` is minor, `fix:` is patch, and breaking-change markers are
+major. Unknown commits are marked clearly; if all selected commits are unknown,
+Railgun uses a patch bump and shows a warning.
+
+The command is local-only. It does not publish, deploy, or push. A successful
+run leaves a local branch ready for review, including a final release commit:
+
+```text
+chore(release): v<nextVersion>
+```
 
 ## Integrations
 
