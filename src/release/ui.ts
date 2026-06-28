@@ -57,7 +57,12 @@ export function releaseUi(): string {
       </table>
     </main>
     <script>
-      const state = { branches: [], commits: [] };
+      const state = {
+        branchTouched: false,
+        branches: [],
+        commits: [],
+        versionTouched: false,
+      };
       const $ = (id) => document.getElementById(id);
       const api = async (url, options = {}) => {
         const response = await fetch(url, {
@@ -79,7 +84,15 @@ export function releaseUi(): string {
         $("target").value = params.get("target") || state.branches.find((branch) => branch !== $("source").value) || repo.currentBranch;
         $("version").value = params.get("version") || "";
         $("releaseBranch").value = params.get("branch") || "";
+        state.versionTouched = params.has("version");
+        state.branchTouched = params.has("branch");
         await refresh();
+      }
+      function resetSuggestion() {
+        state.versionTouched = false;
+        state.branchTouched = false;
+        $("version").value = "";
+        $("releaseBranch").value = "";
       }
       async function refresh() {
         const source = $("source").value;
@@ -101,8 +114,12 @@ export function releaseUi(): string {
           method: "POST",
           body: JSON.stringify({ source: $("source").value, target: $("target").value, commits }),
         });
-        $("version").value = $("version").value || result.version;
-        $("releaseBranch").value = $("releaseBranch").value || result.branch;
+        if (!state.versionTouched) {
+          $("version").value = result.version;
+        }
+        if (!state.branchTouched) {
+          $("releaseBranch").value = result.branch;
+        }
         $("summary").textContent = "Bump: " + result.bump;
       }
       function renderCommits() {
@@ -132,6 +149,10 @@ export function releaseUi(): string {
         }
       }
       $("refresh").addEventListener("click", refresh);
+      $("source").addEventListener("change", () => { resetSuggestion(); refresh(); });
+      $("target").addEventListener("change", () => { resetSuggestion(); refresh(); });
+      $("version").addEventListener("input", () => { state.versionTouched = true; });
+      $("releaseBranch").addEventListener("input", () => { state.branchTouched = true; });
       $("preflight").addEventListener("click", () => submit("/api/preflight"));
       $("create").addEventListener("click", () => submit("/api/create-release"));
       load().catch((error) => show(error.stack || String(error), "error"));

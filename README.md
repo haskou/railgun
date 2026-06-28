@@ -18,6 +18,7 @@ npm i -g @haskou/railgun
 ## Usage
 
 ```bash
+Usage:
   railgun init
   railgun add context <Name>
   railgun add ci
@@ -27,7 +28,7 @@ npm i -g @haskou/railgun
   railgun add express
   railgun add npm
   railgun add renovate
-  railgun release --source main --target production
+  railgun release [--source main] [--target production] [--branch release/v1.5.0] [--version 1.5.0] [--port 3000] [--no-open]
   railgun sync agents
   railgun sync skills
   railgun help
@@ -42,9 +43,9 @@ Commands:
   add express           Add ExpressKernelServer and health route.
   add npm               Add npm CI/publishing workflow and README badges.
   add renovate          Add Renovate config and README badge.
-  release               Open a local UI to create a release branch.
+  release               Open a local UI to cherry-pick selected commits into a release branch.
   sync agents           Download AGENTS.md from ddd-engineer-skills.
-  sync skills           Sync DDD skills into .agents/skills.
+  sync skills           Download DDD skills into .agents/skills.
 ```
 
 There is a `man railgun` available.
