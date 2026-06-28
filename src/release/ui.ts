@@ -15,7 +15,7 @@ export function releaseUi(): string {
       table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #d9dfe7; }
       th, td { text-align: left; padding: 10px; border-bottom: 1px solid #edf0f4; vertical-align: top; }
       th { background: #eef2f6; }
-      .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+      .grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; align-items: end; }
       .panel { background: white; border: 1px solid #d9dfe7; padding: 14px; margin-bottom: 16px; border-radius: 8px; }
       .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
       .badge { display: inline-block; padding: 3px 7px; border-radius: 999px; background: #e8eef5; font-size: 12px; }
@@ -33,6 +33,7 @@ export function releaseUi(): string {
       <section class="panel">
         <div class="grid">
           <div><label for="source">Source</label><select id="source"></select></div>
+          <div><button id="swap" type="button">Swap</button></div>
           <div><label for="target">Target</label><select id="target"></select></div>
           <div><label for="version">Version</label><input id="version" /></div>
           <div><label for="releaseBranch">Release branch</label><input id="releaseBranch" /></div>
@@ -77,7 +78,7 @@ export function releaseUi(): string {
       const show = (message, className = "") => { $("messages").className = className; $("messages").textContent = message; };
       const setStatus = (message) => { $("status").textContent = message; };
       const setBusy = (busy) => {
-        for (const id of ["refresh", "preflight", "create"]) {
+        for (const id of ["refresh", "swap", "preflight", "create"]) {
           $(id).disabled = busy;
         }
       };
@@ -101,6 +102,13 @@ export function releaseUi(): string {
         state.branchTouched = false;
         $("version").value = "";
         $("releaseBranch").value = "";
+      }
+      function swapBranches() {
+        const source = $("source").value;
+        $("source").value = $("target").value;
+        $("target").value = source;
+        resetSuggestion();
+        refresh();
       }
       async function refresh() {
         setBusy(true);
@@ -180,6 +188,7 @@ export function releaseUi(): string {
         }
       }
       $("refresh").addEventListener("click", refresh);
+      $("swap").addEventListener("click", swapBranches);
       $("source").addEventListener("change", () => { resetSuggestion(); refresh(); });
       $("target").addEventListener("change", () => { resetSuggestion(); refresh(); });
       $("version").addEventListener("input", () => { state.versionTouched = true; });
