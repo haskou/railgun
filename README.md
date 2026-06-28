@@ -41,7 +41,7 @@ Commands:
   add express           Add ExpressKernelServer and health route.
   add npm               Add npm CI/publishing workflow and README badges.
   add renovate          Add Renovate config and README badge.
-  sync agents           Sync AGENTS.md from railgun.
+  sync agents           Download AGENTS.md from ddd-engineer-skills.
   sync skills           Sync DDD skills into .agents/skills.
 ```
 
@@ -152,11 +152,12 @@ the workflow.
 
 `railgun add renovate` creates `renovate.json` and adds the Renovate badge.
 
-`railgun sync agents` rewrites `AGENTS.md` from the railgun template.
+`railgun sync agents` downloads `AGENTS.md` from
+`https://github.com/haskou/ddd-engineer-skills.git`.
 
-`railgun sync skills` copies the packaged DDD skills into `.agents/skills`.
-Set `RAILGUN_DDD_SKILLS_PATH` to copy from a custom local skills directory
-instead.
+`railgun sync skills` downloads the DDD skills from
+`https://github.com/haskou/ddd-engineer-skills.git` and copies them into
+`.agents/skills`.
 
 ## Release Branches
 

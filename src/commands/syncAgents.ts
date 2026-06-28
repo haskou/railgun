@@ -1,7 +1,5 @@
-import { write } from "../filesystem";
-import { agentsMd } from "../templates/projectTemplates";
+import { copyDddAgents } from "../skills";
 
 export function syncAgents(root: string): void {
-  write(root, "AGENTS.md", agentsMd());
-  console.log("Synced AGENTS.md.");
+  copyDddAgents(root);
 }

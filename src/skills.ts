@@ -1,37 +1,45 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
-const developmentSkillsPath = "/home/hasko/Projects/ddd-engineer-skill/skills";
+const defaultSkillsRepository =
+  "https://github.com/haskou/ddd-engineer-skills.git";
 
-export function copyDddSkills(root: string): void {
-  const source = resolveSkillsPath();
-
-  if (!source) {
-    console.log("DDD skills not found. Skipping skill copy.");
-
-    return;
-  }
-
-  const target = join(root, ".agents", "skills");
-  mkdirSync(target, { recursive: true });
-  cpSync(source, target, { recursive: true });
-  writeVersionFile(source, target);
-  console.log(`Copied DDD skills from ${source}`);
+export function copyDddAgents(root: string): void {
+  withDddSkillsRepository((checkout) => {
+    cpSync(join(checkout, "AGENTS.md"), join(root, "AGENTS.md"));
+    console.log(`Copied AGENTS.md from ${defaultSkillsRepository}`);
+  });
 }
 
-function resolveSkillsPath(): string | undefined {
-  const candidates = [
-    process.env.RAILGUN_DDD_SKILLS_PATH,
-    join(__dirname, "..", "skills"),
-    join(__dirname, "..", "..", "skills"),
-    developmentSkillsPath,
-  ];
+export function copyDddSkills(root: string): void {
+  withDddSkillsRepository((checkout) => {
+    const source = join(checkout, "skills");
+    const target = join(root, ".agents", "skills");
 
-  return candidates.find(
-    (candidate): candidate is string =>
-      typeof candidate === "string" && existsSync(candidate),
-  );
+    mkdirSync(target, { recursive: true });
+    cpSync(source, target, { recursive: true });
+    writeVersionFile(checkout, target);
+    console.log(`Copied DDD skills from ${defaultSkillsRepository}`);
+  });
+}
+
+function withDddSkillsRepository(callback: (checkout: string) => void): void {
+  const checkout = mkdtempSync(join(tmpdir(), "railgun-ddd-skills-"));
+
+  try {
+    execFileSync(
+      "git",
+      ["clone", "--depth", "1", defaultSkillsRepository, checkout],
+      {
+        stdio: "ignore",
+      },
+    );
+    callback(checkout);
+  } finally {
+    rmSync(checkout, { force: true, recursive: true });
+  }
 }
 
 function writeVersionFile(source: string, target: string): void {

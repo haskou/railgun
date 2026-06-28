@@ -1,7 +1,6 @@
 import { write, writeJson } from "../filesystem";
 import { askProjectAnswers, ProjectAnswers } from "../projectAnswers";
 import {
-  agentsMd,
   basicIndex,
   nodemonConfig,
   projectBuildTsconfig,
@@ -23,6 +22,7 @@ import { addEnvironment } from "./addEnvironment";
 import { addExpress } from "./addExpress";
 import { addNpm } from "./addNpm";
 import { addRenovate } from "./addRenovate";
+import { syncAgents } from "./syncAgents";
 import { syncSkills } from "./syncSkills";
 
 export async function initProject(root: string): Promise<void> {
@@ -30,6 +30,7 @@ export async function initProject(root: string): Promise<void> {
   const versions = resolvePackageVersions();
 
   writeProjectBase(root, answers, versions);
+  syncAgents(root);
   syncSkills(root);
   addEnvironment(root);
 
@@ -156,7 +157,6 @@ function writeProjectBase(
     "import config from '@haskou/eslint-config';\n\nexport default config;\n",
   );
   write(root, ".gitignore", projectGitignore());
-  write(root, "AGENTS.md", agentsMd());
   write(root, "README.md", projectReadme(answers));
   write(root, "LICENSE", projectLicense(answers));
   write(root, "src/index.ts", basicIndex());

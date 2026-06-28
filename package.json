@@ -14,8 +14,7 @@
     "dist",
     "logo.jpg",
     "man",
-    "README.md",
-    "skills"
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"

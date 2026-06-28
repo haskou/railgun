@@ -24,6 +24,6 @@ Commands:
   add express           Add ExpressKernelServer and health route.
   add npm               Add npm CI/publishing workflow and README badges.
   add renovate          Add Renovate config and README badge.
-  sync agents           Sync AGENTS.md from railgun.
-  sync skills           Sync packaged DDD skills into .agents/skills.
+  sync agents           Download AGENTS.md from ddd-engineer-skills.
+  sync skills           Download DDD skills into .agents/skills.
 `;

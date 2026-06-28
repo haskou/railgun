@@ -10,12 +10,63 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const cli = join(__dirname, "..", "dist", "cli.js");
+const dddSkillsRepositoryUrl =
+  "https://github.com/haskou/ddd-engineer-skills.git";
+const dddSkillsAgents = "# DDD Engineer AGENTS\n";
 
 function railgun(args: string[], cwd?: string): string {
   return execFileSync(process.execPath, [cli, ...args], {
     cwd,
     encoding: "utf8",
   });
+}
+
+function createSkillsRepository(root: string): string {
+  const repository = join(root, "skills-repository");
+
+  mkdirSync(join(repository, "skills", "ddd-engineer"), { recursive: true });
+  mkdirSync(join(repository, "skills", "ddd-migration"), { recursive: true });
+  mkdirSync(join(repository, "skills", "haskou-value-objects"), {
+    recursive: true,
+  });
+  writeFileSync(
+    join(repository, "skills", "ddd-engineer", "SKILL.md"),
+    "# DDD engineer\n",
+  );
+  writeFileSync(
+    join(repository, "skills", "ddd-migration", "SKILL.md"),
+    "# DDD migration\n",
+  );
+  writeFileSync(
+    join(repository, "skills", "haskou-value-objects", "SKILL.md"),
+    "# Haskou value objects\n",
+  );
+  writeFileSync(join(repository, "AGENTS.md"), dddSkillsAgents);
+  execFileSync("git", ["init"], { cwd: repository, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "railgun@example.com"], {
+    cwd: repository,
+    stdio: "ignore",
+  });
+  execFileSync("git", ["config", "user.name", "Railgun Tests"], {
+    cwd: repository,
+    stdio: "ignore",
+  });
+  execFileSync("git", ["add", "."], { cwd: repository, stdio: "ignore" });
+  execFileSync("git", ["commit", "-m", "Add test skills"], {
+    cwd: repository,
+    stdio: "ignore",
+  });
+
+  return repository;
+}
+
+function gitRepositoryRedirect(repository: string): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: `url.file://${repository}.insteadOf`,
+    GIT_CONFIG_VALUE_0: dddSkillsRepositoryUrl,
+  };
 }
 
 describe("railgun cli", () => {
@@ -172,35 +223,19 @@ describe("railgun cli", () => {
 
   it("copies DDD skills during project initialization without npm dependency", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-init-"));
-    const skillsPath = join(cwd, "source-skills");
-
-    mkdirSync(join(skillsPath, "ddd-engineer"), { recursive: true });
-    mkdirSync(join(skillsPath, "haskou-value-objects"), { recursive: true });
-    writeFileSync(
-      join(skillsPath, "ddd-engineer", "SKILL.md"),
-      "# DDD engineer\n",
-    );
-    writeFileSync(
-      join(skillsPath, "haskou-value-objects", "SKILL.md"),
-      "# Haskou value objects\n",
-    );
+    const skillsRepository = createSkillsRepository(cwd);
 
     execFileSync(process.execPath, [cli, "init"], {
       cwd,
       encoding: "utf8",
-      env: {
-        ...process.env,
-        RAILGUN_DDD_SKILLS_PATH: skillsPath,
-      },
+      env: gitRepositoryRedirect(skillsRepository),
       input: "skills-app\nSkills app\nMIT\nn\nn\nn\nn\n",
     });
 
     const packageJson = readFileSync(join(cwd, "package.json"), "utf8");
 
     expect(packageJson).not.toContain("@haskou/ddd-skills");
-    expect(readFileSync(join(cwd, "AGENTS.md"), "utf8")).toBe(
-      readFileSync(join(__dirname, "..", "AGENTS.md"), "utf8"),
-    );
+    expect(readFileSync(join(cwd, "AGENTS.md"), "utf8")).toBe(dddSkillsAgents);
     expect(existsSync(join(cwd, ".agents/skills/ddd-engineer/SKILL.md"))).toBe(
       true,
     );
@@ -220,10 +255,12 @@ describe("railgun cli", () => {
 
   it("initializes optional integrations by default", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-init-defaults-"));
+    const skillsRepository = createSkillsRepository(cwd);
 
     execFileSync(process.execPath, [cli, "init"], {
       cwd,
       encoding: "utf8",
+      env: gitRepositoryRedirect(skillsRepository),
       input: "\n\n\n\n\n\n\n",
     });
 
@@ -249,10 +286,12 @@ describe("railgun cli", () => {
 
   it("adds expressive API test client and definitions with Express", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-express-"));
+    const skillsRepository = createSkillsRepository(cwd);
 
     execFileSync(process.execPath, [cli, "init"], {
       cwd,
       encoding: "utf8",
+      env: gitRepositoryRedirect(skillsRepository),
       input: "express-app\nExpress app\nMIT\ny\nn\nn\nn\n",
     });
 
@@ -336,49 +375,26 @@ describe("railgun cli", () => {
 
   it("syncs AGENTS.md standalone", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-agents-"));
+    const skillsRepository = createSkillsRepository(cwd);
 
     writeFileSync(join(cwd, "AGENTS.md"), "stale\n");
-    railgun(["sync", "agents"], cwd);
+    execFileSync(process.execPath, [cli, "sync", "agents"], {
+      cwd,
+      encoding: "utf8",
+      env: gitRepositoryRedirect(skillsRepository),
+    });
 
-    expect(readFileSync(join(cwd, "AGENTS.md"), "utf8")).toBe(
-      readFileSync(join(__dirname, "..", "AGENTS.md"), "utf8"),
-    );
+    expect(readFileSync(join(cwd, "AGENTS.md"), "utf8")).toBe(dddSkillsAgents);
   });
 
   it("syncs DDD skills standalone", () => {
     const cwd = mkdtempSync(join(tmpdir(), "railgun-skills-"));
-    const skillsPath = join(cwd, "source-skills");
-
-    mkdirSync(join(skillsPath, "ddd-engineer"), { recursive: true });
-    writeFileSync(
-      join(skillsPath, "ddd-engineer", "SKILL.md"),
-      "# DDD engineer\n",
-    );
+    const skillsRepository = createSkillsRepository(cwd);
 
     execFileSync(process.execPath, [cli, "sync", "skills"], {
       cwd,
       encoding: "utf8",
-      env: {
-        ...process.env,
-        RAILGUN_DDD_SKILLS_PATH: skillsPath,
-      },
-    });
-
-    expect(existsSync(join(cwd, ".agents/skills/ddd-engineer/SKILL.md"))).toBe(
-      true,
-    );
-  });
-
-  it("syncs packaged DDD skills without environment override", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "railgun-packaged-skills-"));
-
-    execFileSync(process.execPath, [cli, "sync", "skills"], {
-      cwd,
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        RAILGUN_DDD_SKILLS_PATH: "",
-      },
+      env: gitRepositoryRedirect(skillsRepository),
     });
 
     expect(existsSync(join(cwd, ".agents/skills/ddd-engineer/SKILL.md"))).toBe(
