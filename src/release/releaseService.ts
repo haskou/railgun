@@ -69,10 +69,10 @@ export function createRelease(
   const warnings = [...preflight.warnings];
 
   return withTemporaryWorktree(root, request.target, (worktree) => {
-    createBranch(worktree, request.releaseBranch);
     cherryPick(worktree, commits);
     warnings.push(...updateVersionFiles(worktree, request.version).warnings);
     commitAll(worktree, `chore(release): v${request.version}`);
+    createBranch(worktree, request.releaseBranch);
 
     return {
       ...preflight,

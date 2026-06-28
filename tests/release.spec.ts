@@ -1,9 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { highestBump, inferChangeType } from "../src/release/changeInference";
+import { startReleaseServer } from "../src/release/releaseServer";
 import {
   compareBranches,
   createRelease,
@@ -51,6 +53,16 @@ function commitWithAuthorDate(
 
 function git(root: string, args: string[]): string {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" });
+}
+
+function gitSucceeds(root: string, args: string[]): boolean {
+  try {
+    git(root, args);
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function repo(defaultBranch = "main"): string {
@@ -332,6 +344,30 @@ describe("release git workflow", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("does not leave a partial release branch when preparation fails", () => {
+    const root = repo();
+
+    writeFileSync(join(root, "package.json"), "{invalid-json");
+    git(root, ["add", "package.json"]);
+    git(root, ["commit", "-m", "chore: add invalid package"]);
+    git(root, ["checkout", "-b", "production"]);
+    git(root, ["checkout", "main"]);
+    const hash = commit(root, "fix.txt", "fix\n", "fix: release input");
+
+    expect(() =>
+      createRelease(root, {
+        commits: [hash],
+        releaseBranch: "release/v0.0.1",
+        source: "main",
+        target: "production",
+        version: "0.0.1",
+      }),
+    ).toThrow();
+    expect(gitSucceeds(root, ["rev-parse", "--verify", "release/v0.0.1"])).toBe(
+      false,
+    );
+  });
+
   it("detects cherry-pick conflicts without modifying the main working tree", () => {
     const root = repo();
 
@@ -354,5 +390,23 @@ describe("release git workflow", () => {
     expect(result.error).toBe("CHERRY_PICK_CONFLICT");
     expect(result.conflictedFiles).toContain("conflict.txt");
     expect(git(root, ["status", "--short"])).toBe(before);
+  });
+
+  it("rejects release server startup when the requested port is busy", async () => {
+    const server = createServer();
+
+    await new Promise<void>((resolve) => {
+      server.listen(0, "127.0.0.1", resolve);
+    });
+
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 0;
+
+    await expect(
+      startReleaseServer({ open: false, port, root: process.cwd() }),
+    ).rejects.toThrow();
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
   });
 });

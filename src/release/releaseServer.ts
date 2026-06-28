@@ -33,8 +33,12 @@ export async function startReleaseServer(
     });
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(options.port ?? 0, "127.0.0.1", resolve);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(options.port ?? 0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
   });
 
   const address = server.address() as AddressInfo;
