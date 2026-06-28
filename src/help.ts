@@ -10,6 +10,7 @@ Usage:
   railgun add express
   railgun add npm
   railgun add renovate
+  railgun release [--source main] [--target production] [--branch release/v1.5.0] [--version 1.5.0] [--port 3000] [--no-open]
   railgun sync agents
   railgun sync skills
   railgun help
@@ -24,6 +25,7 @@ Commands:
   add express           Add ExpressKernelServer and health route.
   add npm               Add npm CI/publishing workflow and README badges.
   add renovate          Add Renovate config and README badge.
+  release               Open a local UI to cherry-pick selected commits into a release branch.
   sync agents           Download AGENTS.md from ddd-engineer-skills.
   sync skills           Download DDD skills into .agents/skills.
 `;

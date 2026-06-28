@@ -11,6 +11,9 @@ railgun \- scaffold DDD projects and integrations
 .B railgun add
 \fIci|docker|docker-ci|environment|express|npm|renovate\fR
 .br
+.B railgun release
+[\fB--source\fR main] [\fB--target\fR production] [\fB--branch\fR release/v1.5.0] [\fB--version\fR 1.5.0] [\fB--port\fR 3000] [\fB--no-open\fR]
+.br
 .B railgun sync
 \fIagents|skills\fR
 .br
@@ -46,6 +49,9 @@ Add GitHub Actions npm CI/publishing workflow and README badges.
 .TP
 .B add renovate
 Add Renovate config and README badge.
+.TP
+.B release
+Open a local web UI on 127.0.0.1 to create a release branch from a target branch and selected cherry-picks from a source branch. Pending commits are detected by patch equivalence, latest release is read from SemVer Git tags reachable from the target branch, and the result is a local release branch with a final chore(release): v<version> commit.
 .TP
 .B sync agents
 Download AGENTS.md from https://github.com/haskou/ddd-engineer-skills.git.

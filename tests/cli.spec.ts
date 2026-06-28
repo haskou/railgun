@@ -82,6 +82,7 @@ describe("railgun cli", () => {
     expect(output).toContain("railgun add express");
     expect(output).toContain("railgun add npm");
     expect(output).toContain("railgun add renovate");
+    expect(output).toContain("railgun release");
     expect(output).toContain("railgun sync agents");
     expect(output).toContain("railgun sync skills");
   });
@@ -98,6 +99,7 @@ describe("railgun cli", () => {
       "add docker",
       "add docker-ci",
       "add environment",
+      "release",
       "sync agents",
       "sync skills",
     ]) {
