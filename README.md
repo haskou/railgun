@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com/)
 
-CLI to initialize DDD projects with `@haskou/ddd-kernel` and add contexts and integrations.
+CLI to initialize and maintain DDD projects with `@haskou/ddd-kernel`.
 
 ## Installation
 
