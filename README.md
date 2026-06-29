@@ -214,7 +214,8 @@ the workflow.
 ## Release Branches
 
 CI publishes npm versions from pull requests merged into the default branch
-according to the source branch prefix:
+according to the source branch prefix, or from Renovate/runtime dependency PRs
+whose title starts with `fix:` or `fix(...):`.
 
 | Branch prefix | npm version bump |
 | ------------- | ---------------- |

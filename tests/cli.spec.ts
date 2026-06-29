@@ -436,8 +436,30 @@ describe("railgun cli", () => {
     expect(workflow).toContain("npm run build");
     expect(workflow).toContain("npm publish --access public --tag latest");
     expect(workflow).toContain("npm run pack:dry");
+    expect(workflow).toContain(
+      "startsWith(github.event.pull_request.title, 'fix(')",
+    );
+    expect(workflow).toContain(
+      "PR_TITLE: ${{ github.event.pull_request.title }}",
+    );
+    expect(workflow).toContain("fix:*|fix\\(*");
     expect(workflow).not.toContain("NPM_TOKEN");
     expect(workflow).not.toContain("NODE_AUTH_TOKEN");
+  });
+
+  it("keeps the checked-in npm workflow aligned with Renovate runtime releases", () => {
+    const workflow = readFileSync(
+      join(__dirname, "..", ".github/workflows/ci.yml"),
+      "utf8",
+    );
+
+    expect(workflow).toContain(
+      "startsWith(github.event.pull_request.title, 'fix(')",
+    );
+    expect(workflow).toContain(
+      "PR_TITLE: ${{ github.event.pull_request.title }}",
+    );
+    expect(workflow).toContain("fix:*|fix\\(*");
   });
 
   it("adds CI workflow as a standalone alias", () => {
