@@ -436,6 +436,13 @@ describe("railgun cli", () => {
     expect(workflow).toContain("npm run build");
     expect(workflow).toContain("npm publish --access public --tag latest");
     expect(workflow).toContain("npm run pack:dry");
+    expect(workflow).toContain(
+      "startsWith(github.event.pull_request.title, 'fix(')",
+    );
+    expect(workflow).toContain(
+      "PR_TITLE: ${{ github.event.pull_request.title }}",
+    );
+    expect(workflow).toContain("fix:*|fix\\(*");
     expect(workflow).not.toContain("NPM_TOKEN");
     expect(workflow).not.toContain("NODE_AUTH_TOKEN");
   });

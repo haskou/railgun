@@ -73,7 +73,9 @@ jobs:
         github.event.pull_request.head.ref == 'fix' ||
         startsWith(github.event.pull_request.head.ref, 'fix/') ||
         github.event.pull_request.head.ref == 'break' ||
-        startsWith(github.event.pull_request.head.ref, 'break/')
+        startsWith(github.event.pull_request.head.ref, 'break/') ||
+        startsWith(github.event.pull_request.title, 'fix:') ||
+        startsWith(github.event.pull_request.title, 'fix(')
       )
 
     steps:
@@ -109,6 +111,7 @@ jobs:
           current_version="$(node -p "require('./package.json').version")"
           published_version="$(npm view "$package_name" version 2>/dev/null || true)"
           branch_name="$HEAD_BRANCH"
+          pr_title="$PR_TITLE"
           release_marker="for #$PR_NUMBER"
 
           echo "already_released=false" >> "$GITHUB_OUTPUT"
@@ -124,8 +127,15 @@ jobs:
               bump="major"
               ;;
             *)
-              echo "Unsupported release branch: $branch_name"
-              exit 1
+              case "$pr_title" in
+                fix:*|fix\\(*)
+                  bump="patch"
+                  ;;
+                *)
+                  echo "Unsupported release branch or PR title: $branch_name / $pr_title"
+                  exit 1
+                  ;;
+              esac
               ;;
           esac
 
@@ -217,6 +227,7 @@ jobs:
         env:
           HEAD_BRANCH: \${{ github.event.pull_request.head.ref }}
           PR_NUMBER: \${{ github.event.pull_request.number }}
+          PR_TITLE: \${{ github.event.pull_request.title }}
 
       - name: Publish package
         if: >-
@@ -317,7 +328,8 @@ export function releaseBranchesReadmeSection(): string {
   return `## Release Branches
 
 CI publishes npm versions from pull requests merged into the default branch
-according to the source branch prefix:
+according to the source branch prefix, or from Renovate/runtime dependency PRs
+whose title starts with \`fix:\` or \`fix(...):\`.
 
 | Branch prefix | npm version bump |
 | ------------- | ---------------- |
