@@ -3,9 +3,47 @@ import { addReadmeBadge, writeJson } from "../filesystem";
 export function addRenovate(root: string): void {
   writeJson(root, "renovate.json", {
     $schema: "https://docs.renovatebot.com/renovate-schema.json",
-    extends: ["config:recommended"],
+    commitMessageAction: "⬆️ update",
+    extends: ["config:recommended", ":semanticCommits"],
     labels: ["dependencies"],
+    packageRules: [
+      {
+        automerge: true,
+        automergeType: "pr",
+        description:
+          "Runtime deps: patch/minor grouped, automerge, release patch",
+        groupName: "non-major runtime dependencies",
+        matchDepTypes: ["dependencies", "optionalDependencies"],
+        matchUpdateTypes: ["minor", "patch"],
+        semanticCommitScope: "deps",
+        semanticCommitType: "fix",
+      },
+      {
+        automerge: true,
+        automergeType: "pr",
+        description: "Dev deps: patch/minor grouped, automerge, no release",
+        groupName: "non-major dev dependencies",
+        matchDepTypes: ["devDependencies"],
+        matchUpdateTypes: ["minor", "patch"],
+        semanticCommitScope: "deps",
+        semanticCommitType: "chore",
+      },
+      {
+        automerge: false,
+        description: "Peer deps: manual review",
+        matchDepTypes: ["peerDependencies"],
+        semanticCommitScope: "peer-deps",
+        semanticCommitType: "fix",
+      },
+      {
+        automerge: false,
+        description: "Major updates: manual review",
+        matchUpdateTypes: ["major"],
+      },
+    ],
+    platformAutomerge: true,
     rangeStrategy: "bump",
+    timezone: "Europe/Madrid",
   });
   addReadmeBadge(
     root,
