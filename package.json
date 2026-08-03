@@ -44,7 +44,7 @@
     "prettier": "^3.9.6"
   },
   "devDependencies": {
-    "@haskou/eslint-config": "0.2.1",
+    "@haskou/eslint-config": "0.2.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.5",
     "eslint": "^10.8.0",
