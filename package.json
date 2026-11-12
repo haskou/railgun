@@ -41,7 +41,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "prettier": "^3.9.10"
+    "prettier": "^3.10.1"
   },
   "devDependencies": {
     "@haskou/eslint-config": "0.2.2",
